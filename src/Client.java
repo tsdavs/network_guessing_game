@@ -1,12 +1,13 @@
 import java.io.*;
 import java.net.Socket;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Client extends Thread{
 
     private Socket socket;
 
-    public Client() {
+    private Client() {
         Thread t = new Thread(() -> {
             try {
                 socket = new Socket("localhost", 61004);
@@ -22,25 +23,48 @@ public class Client extends Thread{
         t.start();
     }
 
-    public void sendGuess() throws IOException {
+    private void sendGuess() throws IOException {
         //Send the message to the server
         OutputStream os = socket.getOutputStream();
+
         OutputStreamWriter osw = new OutputStreamWriter(os);
+
         BufferedWriter bw = new BufferedWriter(osw);
 
-        Scanner scanner = new Scanner(System.in);
+        int guess = 0;
 
-        String number = scanner.nextLine();
+        boolean error;
 
-        String sendMessage = number + "\n";
+        do {
+            try {
+                Scanner scanner = new Scanner(System.in);
+
+                guess = scanner.nextInt();
+
+                error = false;
+
+            } catch (InputMismatchException e) {
+                System.out.println("Input was NaN. Try again.");
+
+                error = true;
+            }
+        } while (error);
+
+        String sendMessage = guess + "\n";
+
         bw.write(sendMessage);
+
         bw.flush();
 
         //Get the return message from the server
         InputStream is = socket.getInputStream();
+
         InputStreamReader isr = new InputStreamReader(is);
+
         BufferedReader br = new BufferedReader(isr);
+
         String message = br.readLine();
+
         System.out.println(message);
 
     }

@@ -71,6 +71,7 @@ public class Client extends Thread{
 
     public static void main(String[] args) {
         Thread[] threads = {
+                new Client(),
                 new Client()
         };
 

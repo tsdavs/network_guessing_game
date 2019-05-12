@@ -6,14 +6,26 @@ import java.util.Scanner;
 public class Client extends Thread{
 
     private Socket socket;
+    private InputStream is;
+    private InputStreamReader isr;
+    private BufferedReader br;
+    private BufferedWriter bw;
+    private OutputStreamWriter osw;
+    private OutputStream os;
+    private Scanner scanner;
 
     private Client() {
         Thread t = new Thread(() -> {
             try {
-                socket = new Socket("localhost", 61004);
+                socket = new Socket("localhost", 61005);
+
+                setup();
 
                 while(true) {
-                    sendGuess();
+                    //sendGuess();
+
+                    listen();
+
                 }
 
             } catch (Exception e) {
@@ -23,22 +35,55 @@ public class Client extends Thread{
         t.start();
     }
 
+    private void setup() throws IOException {
+        //Reading the message from the server
+        is = socket.getInputStream();
+        isr = new InputStreamReader(is);
+        br = new BufferedReader(isr);
+
+        //Sending the response back to the client.
+        os = socket.getOutputStream();
+        osw = new OutputStreamWriter(os);
+        bw = new BufferedWriter(osw);
+
+        scanner = new Scanner(System.in);
+
+        sendName();
+    }
+
+    private void sendName() throws IOException {
+        while(true) {
+            String message = br.readLine();
+
+            if(message.equals("1")){
+                System.out.println("Welcome...");
+                break;
+            }
+
+            System.out.println(message);
+
+            bw.write(scanner.next() + "\n");
+
+            bw.flush();
+        }
+    }
+
+    private void listen() throws IOException {
+        String message = br.readLine();
+
+        //if(message.startsWith("MESSAGE ")){
+            System.out.println(message);
+        //}
+
+    }
+
     private void sendGuess() throws IOException {
-        //Send the message to the server
-        OutputStream os = socket.getOutputStream();
-
-        OutputStreamWriter osw = new OutputStreamWriter(os);
-
-        BufferedWriter bw = new BufferedWriter(osw);
-
-        int guess = 0;
+        int guess = -1;
 
         boolean error;
 
         do {
             try {
-                Scanner scanner = new Scanner(System.in);
-
                 guess = scanner.nextInt();
 
                 error = false;
@@ -56,22 +101,13 @@ public class Client extends Thread{
 
         bw.flush();
 
-        //Get the return message from the server
-        InputStream is = socket.getInputStream();
-
-        InputStreamReader isr = new InputStreamReader(is);
-
-        BufferedReader br = new BufferedReader(isr);
-
         String message = br.readLine();
 
         System.out.println(message);
-
     }
 
     public static void main(String[] args) {
         Thread[] threads = {
-                new Client(),
                 new Client()
         };
 

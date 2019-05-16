@@ -21,12 +21,7 @@ public class Client extends Thread{
 
                 setup();
 
-                while(true) {
-                    //sendGuess();
-
-                    listen();
-
-                }
+                listen();
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -55,8 +50,7 @@ public class Client extends Thread{
         while(true) {
             String message = br.readLine();
 
-            if(message.equals("1")){
-                System.out.println("Welcome...");
+            if(message.equals("MESSAGE ")){
                 break;
             }
 
@@ -69,14 +63,28 @@ public class Client extends Thread{
     }
 
     private void listen() throws IOException {
-        String message = br.readLine();
+        while(true) {
+            String message = br.readLine();
 
-        if(message.startsWith("MESSAGE ")){
-            System.out.println("MESSAGE: ");
+            if (message.startsWith("MESSAGE ")) {
+                System.out.println(message);
 
-            System.out.println(message);
+            } else if (message.equals("1")) {
+                sendGuess();
+
+            } else if (message.equals("0")) {
+                System.out.println("Please wait for other players to finish.");
+
+            } else if (message.startsWith("GAMEOVER")) {
+                System.out.println(message);
+
+            } else if (message.startsWith("END")) {
+                System.out.println(message);
+
+            } else if (message.equals("QUIT")) {
+                return;
+            }
         }
-
     }
 
     private void sendGuess() throws IOException {

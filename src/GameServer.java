@@ -1,9 +1,7 @@
-import javax.swing.text.html.HTMLDocument;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,7 +33,6 @@ public class GameServer
                 pool.execute(game.new Player(serverSocket.accept()));
                 pool.execute(game.new Player(serverSocket.accept()));
 
-
             } catch (IOException ioe){
                 ioe.printStackTrace();
             }
@@ -53,7 +50,6 @@ class Game {
     private static Set<String> names = new HashSet<>();
 
     private static Set<BufferedWriter> bws = new HashSet<>();
-
 
     private final int MAX = 9; //number limit
     private final int MIN = 0;

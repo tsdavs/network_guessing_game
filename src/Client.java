@@ -71,9 +71,11 @@ public class Client extends Thread{
     private void listen() throws IOException {
         String message = br.readLine();
 
-        //if(message.startsWith("MESSAGE ")){
+        if(message.startsWith("MESSAGE ")){
+            System.out.println("MESSAGE: ");
+
             System.out.println(message);
-        //}
+        }
 
     }
 

@@ -62,8 +62,8 @@ class Game {
     private final int MAXATTEMPTS = 4;
     private final int MAXTIMEOUTCOUNTER = 5;
 
-    private int globalAttempts = 0;
-    private int numPlayers = 0;
+    private volatile int globalAttempts = 0;
+    private volatile int numPlayers = 0;
 
     Game(){
         System.out.println("Random number is: " + RANDOMNUM);
@@ -109,6 +109,8 @@ class Game {
 
                 waitForPlayers();
 
+                listen();
+
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -136,8 +138,6 @@ class Game {
         private void processPlayerName() throws IOException{
             while (true) {
                 sendMessage("Enter your name: \n");
-                /*bw.write("Enter your name: \n");
-                bw.flush();*/
 
                 playerName = br.readLine();
 
@@ -152,17 +152,12 @@ class Game {
                         if(numPlayers > MAXNUMPLAYERS){
                             addPlayerToQueue();
                             sendMessage("MESSAGE You have joined the game \n");
-                            /*bw.write("MESSAGE You have joined the game \n");
-                            bw.flush();*/
                         }
 
                         System.out.println(this.playerName + " at " + clientSocket.getPort() + " added to game");
                         names.add(playerName);
                         players.add(this);
                         sendMessage("MESSAGE \n");
-                        /*bw.write("MESSAGE \n");
-
-                        bw.flush();*/
 
                         break;
                     }
@@ -179,15 +174,9 @@ class Game {
             while(numPlayers <= MAXNUMPLAYERS) {
                 if(numPlayers == MAXNUMPLAYERS) {
                     sendMessage("MESSAGE Game starting. Send your guesses between " + MIN +  " and " + MAX + "\n");
-                    /*bw.write("MESSAGE Game starting. Send your guesses between " + MIN +  " and " + MAX + "\n");
-                    bw.flush();*/
-
-                    listen();
                     break;
                 } else {
                     sendMessage("MESSAGE Waiting for " + (MAXNUMPLAYERS - numPlayers) + " more player(s) \n");
-                    /*bw.write("MESSAGE Waiting for " + (MAXNUMPLAYERS - numPlayers) + " more player(s) \n");
-                    bw.flush();*/
                 }
 
                 try {
@@ -201,12 +190,8 @@ class Game {
 
                 if(timeOutCounter == MAXTIMEOUTCOUNTER){
                     sendMessage("MESSAGE Timeout. Not enough players\n");
-                    /*bw.write("MESSAGE Timeout. Not enough players\n");
-                    bw.flush();*/
 
                     sendMessage("QUIT\n");
-                    /*bw.write("QUIT\n");
-                    bw.flush();*/
 
                     break;
                 }
@@ -219,17 +204,11 @@ class Game {
             System.out.println(this.playerName + " at " + clientSocket.getPort() + " added to queue");
 
             sendMessage("MESSAGE \n");
-            /*bw.write("MESSAGE \n");
-            bw.flush();*/
 
             sendMessage("MESSAGE You have been added to a queue. \n");
-            /*bw.write("MESSAGE You have been added to a queue. \n");
-            bw.flush();*/
 
             while (numPlayers > MAXNUMPLAYERS){
                 sendMessage("MESSAGE Please wait until the current game is over. \n");
-                /*bw.write("MESSAGE Please wait until the current game is over. \n");
-                bw.flush();*/
 
                 try {
                     Thread.sleep(5000);
@@ -245,12 +224,9 @@ class Game {
                 if(!isFinished) {
                     if (!correctGuess || attempt != MAXATTEMPTS) {
                         sendMessage("1\n");
-                        //bw.write("1\n");
                     } else {
                         sendMessage("0\n");
-                        //bw.write("0\n");
                     }
-                    //bw.flush();
 
                     String message;
 
@@ -270,14 +246,7 @@ class Game {
                         }
                     }
                 } else {
-                    try {
-                        Thread.sleep(1000);
-                    } catch (Exception e){
-                        e.printStackTrace();
-                    }
-                    System.out.println(playerName + " is chillin");
-
-                    if(globalAttempts == (MAXNUMPLAYERS * MAXATTEMPTS)){
+                    if(globalAttempts >= (players.size() * MAXATTEMPTS)){
                         gameOver();
                         break;
                     }
@@ -290,13 +259,18 @@ class Game {
 
             String MAR = "Max attempts reached";
 
+
             if(++attempt <= MAXATTEMPTS) {
                 guess(guess, this, attempt);
+
+                System.out.println(playerName + " : attempt " + attempt
+                        + "/" + MAXATTEMPTS + ": " + guess
+                        + " GA: " + globalAttempts + "/" + (MAXATTEMPTS*numPlayers));
 
                 if (guess == RANDOMNUM) {
                     message = " Correct! Congratulations!";
                     //adds remaining attempts
-                    globalAttempts += MAXATTEMPTS - attempt;
+                    globalAttempts += (MAXATTEMPTS - attempt);
                     correctGuess = true;
                     isFinished = true;
                 }
@@ -315,16 +289,11 @@ class Game {
                     message = message + " " + MAR;
                     isFinished = true;
                 }
-
-                //bw.flush();
             } else {
                 message = MAR;
             }
 
             sendMessage(message + "\n");
-            /*bw.write(message + "\n");
-
-            bw.flush();*/
         }
 
         private void gameOver() throws IOException{
@@ -340,16 +309,9 @@ class Game {
 
                 sendMessage("END " + p.playerName + " guessed" + result
                         + "with " + p.attempt + "/" + MAXATTEMPTS + " guesses.\n");
-                /*
-                bw.write("END " + p.playerName + " guessed" + result
-                        + "with " + p.attempt + "/" + MAXATTEMPTS + " guesses.\n");
-                bw.flush();*/
             }
 
             sendMessage("QUIT\n");
-
-            /*bw.write("QUIT\n");
-            bw.flush();*/
         }
 
         private void close() throws IOException{
@@ -368,7 +330,7 @@ class Game {
             players.remove(this);
             names.remove(this.playerName);
             --numPlayers;
-            globalAttempts = numPlayers * players.size(); //this might cause an issue for remaining players
+            globalAttempts = 0;
             clientSocket.close();
         }
 

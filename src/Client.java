@@ -72,12 +72,6 @@ public class Client extends Thread{
             } else if (message.equals("1")) {
                 sendGuess();
 
-            } else if (message.equals("0")) {
-                System.out.println("Please wait for other players to finish.");
-
-            } else if (message.startsWith("GAMEOVER")) {
-                System.out.println(message);
-
             } else if (message.startsWith("END")) {
                 System.out.println(message);
 
